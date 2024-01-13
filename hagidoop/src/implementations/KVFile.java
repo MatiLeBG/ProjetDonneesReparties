@@ -42,6 +42,7 @@ public class KVFile implements FileReaderWriter {
         }
     }
 
+    @Override
     public void close() {
         try {
             if (reader != null) {
@@ -55,31 +56,38 @@ public class KVFile implements FileReaderWriter {
         }
     }
 
+    @Override
     public long getIndex() {
         return index;
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
     }
     
     @Override
     public KV read() {
         try {
-            StringBuilder sb = new StringBuilder();
-            int c;
-            while ((c = reader.read()) != -1) {
+            if (reader == null) {
+                throw new IllegalStateException("Reader not initialized");
+            }
+            String line = "";
+
+            int c = reader.read();
+            KV kv = null;
+            while (c != -1) {
                 if (c == '\n') {
                     break;
                 }
-                sb.append((char) c);
+                index++;
+                line += (char) c;
+                c = reader.read();
             }
-            if (c == -1) {
-                return null;
+            if (c == -1 ) {
+                index = -1;
             }
-            index++;
-            String[] line = sb.toString().split(KV.SEPARATOR);
-            return new KV(line[0], line[1]);
+            if (line.length() > 0) {
+                kv = new KV();
+                kv.k = line.split(KV.SEPARATOR)[0];
+                kv.v = line.split(KV.SEPARATOR)[1];
+            }
+            return kv;
         } catch (IOException e) {
             System.err.println("Error reading file: " + e.getMessage());
             return null;
@@ -97,10 +105,12 @@ public class KVFile implements FileReaderWriter {
         }
     }
 
+    @Override
     public String getFname() {
         return fileName;
     }
 
+    @Override
     public void setFname(String fname) {
         fileName = fname;
     }

@@ -11,8 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import implementations.*;
+import implementations.KVFile;
+import implementations.TextFile;
+
 import interfaces.FileReaderWriter;
+import interfaces.KV;
 
 public class HdfsClient {
 
@@ -71,9 +74,11 @@ public class HdfsClient {
             if (file.exists()) {
                 int fileSize = (int) file.length();
                 int sectionSize = fileSize / adress.size();
-                int currentSectionSize = 0;
+                long currentIndex = 0;
+                KV currentKV;
 
                 FileReaderWriter readerWriter;
+                readerWriter = null;
 
                 switch (fmt) {
                     case FileReaderWriter.FMT_TXT:
@@ -85,24 +90,27 @@ public class HdfsClient {
                     default:
                         break;
                 }
+
+                readerWriter.setFname(fname);
+                readerWriter.open("read");
+
                 for (int i = 0; i < adress.size(); i++) {
                     String fileName = addToFileName(server_indexes.get(i), fname) + "\n";
                     Socket socket = new Socket(adress.get(i), Integer.parseInt(port.get(i)));
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
                     String section = "";
                     BufferedReader reader = new BufferedReader(new FileReader(fname));
-                    int character;
-                    while ((character = reader.read()) != -1 && currentSectionSize <= (i + 1) * sectionSize) {
-                        char c = (char) character;
-                        System.out.println(c);
-                        if (currentSectionSize + 1 <= sectionSize) {
-                            section += c;
+                    currentIndex = readerWriter.getIndex();
+
+                    while (currentIndex != -1 && currentIndex <= (i + 1) * sectionSize) {
+                        currentKV = readerWriter.read();
+                        System.out.println(currentKV.toString());
+                        if (currentKV != null) {
+                            section += currentKV.toString() + "\n";
                             System.out.println(section);
-                            currentSectionSize++;
-                        } else {
-                            out.println("1" + " ; " + fileName + "\n" + section);
-                            section = "";
                         }
+                        currentIndex = readerWriter.getIndex();
                     }
                     out.println("1" + " ; " + fileName + "\n" + section);
                     reader.close();

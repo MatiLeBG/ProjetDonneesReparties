@@ -44,6 +44,7 @@ public class TextFile implements FileReaderWriter {
         }
     }
 
+    @Override
     public void close() {
         try {
             if (reader != null) {
@@ -57,22 +58,55 @@ public class TextFile implements FileReaderWriter {
         }
     }
 
+    @Override
     public long getIndex() {
         return index;
     }
 
+    @Override
     public String getFname() {
         return fileName;
     }
 
+    @Override
     public void setFname(String fname) {
         fileName = fname;
     }
 
+    @Override
     public KV read() {
-        return null;
+        try {
+            if (reader == null) {
+                throw new IllegalStateException("Reader not initialized");
+            }
+            String line = "";
+
+            int c = reader.read();
+            KV kv = null;
+            while (c != -1) {
+                if (c == '\n') {
+                    break;
+                }
+                index++;
+                line += (char) c;
+                c = reader.read();
+            }
+            if (c == -1 ) {
+                index = -1;
+            }
+            if (line.length() > 0) {
+                kv = new KV();
+                kv.k = "";
+                kv.v = line;
+            }
+            return kv;
+        } catch (IOException e) {
+            System.err.println("Error reading file: " + e.getMessage());
+            return null;
+        }
     }
 
+    @Override
     public void write(KV record) {
         
     }
