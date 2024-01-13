@@ -3,11 +3,15 @@ package hdfs;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HdfsServer {
 
     private static final String ADRESSES_PORTS = "../config/adresses.txt"; // fichier texte contenant les adresses et ports
-
+    private static int server_index;
+    
     public static void main(String[] args) {
 
         if (args.length < 2) {
@@ -20,7 +24,13 @@ public class HdfsServer {
         String adress = args[0];
         int port = Integer.parseInt(args[1]);
 
-        addAdressPort(adress, port, ADRESSES_PORTS);
+        server_index = addAdressPort(adress, port, ADRESSES_PORTS);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Interruption détectée. Nettoyage en cours...");
+            // Appeler la méthode pour supprimer l'adresse et le port du fichier texte
+            deleteAdressPort(adress, port, ADRESSES_PORTS);
+        }));
 
         try {
             ServerSocket serverSocket = new ServerSocket(port);
@@ -33,19 +43,51 @@ public class HdfsServer {
             }
         } catch (IOException e) {
             System.out.println("Une erreur est survenue lors de l'écoute sur le port " + port);
+        } finally {
+            deleteAdressPort(adress, port, ADRESSES_PORTS);
         }
     }
 
     private static int addAdressPort(String adresse, int port, String cheminFichier) {
-        int lineNumber = -1;
-        try (PrintWriter writer = new PrintWriter(new FileWriter(cheminFichier, true));
-             LineNumberReader reader = new LineNumberReader(new FileReader(cheminFichier))) {
-            writer.println(adresse + " " + port);
-            lineNumber = reader.getLineNumber();
+        List<String> adressesPorts = lireFichier(cheminFichier);
+        String lineToAdd = adresse + " " + port;
+        if (adressesPorts.contains(lineToAdd)) {
+            System.out.println("L'adresse " + adresse + " et le port " + port + " existent déjà dans le fichier " + cheminFichier);
+            System.exit(1);
+        }
+        int lineNumber = adressesPorts.size();
+        try (PrintWriter writer = new PrintWriter(new FileWriter(cheminFichier, true))) {
+            writer.println(lineToAdd);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("L'adresse " + adresse + " et le port " + port + " ont été ajoutés à la ligne " + lineNumber + " du fichier " + cheminFichier);
         return lineNumber;
+    }
+
+    private static List<String> lireFichier(String cheminFichier) {
+        List<String> lignes = new ArrayList<>();
+        try (BufferedReader lecteur = new BufferedReader(new FileReader(cheminFichier))) {
+            String ligne;
+            while ((ligne = lecteur.readLine()) != null) {
+                lignes.add(ligne);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lignes;
+    }
+
+    private static void deleteAdressPort(String address, int port, String cheminFichier) {
+        try {
+            File file = new File(cheminFichier);
+            List<String> lines = Files.readAllLines(file.toPath());
+            String lineToRemove = address + " " + port;
+            lines.remove(lineToRemove);
+            Files.write(file.toPath(), lines);
+        } catch (IOException e) {
+            System.out.println("Une erreur est survenue lors de la suppression de l'adresse et du port.");
+        }
     }
 
     private static void handleCommand(String command) {
