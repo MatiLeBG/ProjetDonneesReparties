@@ -153,11 +153,15 @@ class HdfsServerThread extends Thread {
     private static void writeFile(String fileName, BufferedReader reader) {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
-            writer.write(reader.readLine());
-            String line;
-            while (!(line = reader.readLine()).equals("EOF")) {
+            System.out.println("Writing to file " + fileName);
+            String line = reader.readLine();
+            while (line != null) {
                 writer.write(line);
-                writer.newLine();
+                String nextLine = reader.readLine();
+                if (nextLine != null) {
+                    writer.newLine();
+                }
+                line = nextLine;
             }
             writer.close();
         } catch (IOException e) {
@@ -177,20 +181,23 @@ class HdfsServerThread extends Thread {
     @Override
     public void run() {
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
             while (!clientSocket.isClosed()) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+            
                 String input = reader.readLine();
+                System.out.println("Received input: " + input);
                 String header = input.split(" ; ")[0];
                 String fileName = input.split(" ; ")[1];
-
                 switch (header) {
                     case "0":
                         // Read file
+                        System.out.println("Reading file " + fileName);
                         readFile(fileName, writer);
                         break;
                     case "1":
                         // Write file
+                        System.out.println("Writing to file " + fileName);
                         writeFile(fileName, reader);
                         break;
                     case "2":

@@ -85,15 +85,13 @@ public class HdfsClient {
 
                 FileReaderWriter readerWriter;
                 readerWriter = null;
-                System.out.println("Format souhaité : " + fmt + "Format texte : " + FileReaderWriter.FMT_TXT + "Format KV : " + FileReaderWriter.FMT_KV + "\n");
+
                 switch (fmt) {
                     case FileReaderWriter.FMT_TXT:
                         readerWriter = new TextFile();
-                        System.out.println("TextFile");
                         break;
                     case FileReaderWriter.FMT_KV:
                         readerWriter = new KVFile();
-                        System.out.println("KVFile");
                         break;
                     default:
                         break;
@@ -101,26 +99,27 @@ public class HdfsClient {
 
                 readerWriter.setFname(fname);
                 readerWriter.open("read");
-                
-                BufferedReader reader = new BufferedReader(new FileReader(fname));
 
                 for (int i = 0; i < adress.size(); i++) {
-                    String fileName = addToFileName(server_indexes.get(i), fname) + "\n";
+                    String fileName = addToFileName(server_indexes.get(i), fname);
                     Socket socket = new Socket(adress.get(i), Integer.parseInt(port.get(i)));
-                    PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                    BufferedReader reader = new BufferedReader(new FileReader(fname));
+                    PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
                     String section = "";
                     currentIndex = readerWriter.getIndex();
 
                     while (currentIndex != -1 && currentIndex <= (i + 1) * sectionSize) {
                         currentKV = readerWriter.read();
                         if (currentKV != null) {
-                            section += KV.SEPARATOR + currentKV.v + "\n";
+                            section += currentKV.k + currentKV.v + "\n";
                         }
                         currentIndex = readerWriter.getIndex();
                     }
                     System.out.println(section);
-                    out.println("1" + " ; " + fileName + "\n" + section);
+                    writer.println("1" + " ; " + fileName + "\n" + section);
+                    socket.close();
                     reader.close();
+                    writer.close();
                 }
             } else {
                 System.out.println("Le fichier " + fname + " n'existe pas.");
