@@ -10,6 +10,9 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
+# Filesamples created by servers
+data/filesample_*.txt
+
 # Package Files #
 *.jar
 *.war

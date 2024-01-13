@@ -7,6 +7,10 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * La classe HdfsServer représente un serveur dans le système de fichiers distribué Hadoop (HDFS).
+ * Il écoute les connexions des clients et gère différentes commandes telles que la lecture, l'écriture et la suppression de fichiers.
+ */
 public class HdfsServer {
 
     private static final String ADRESSES_PORTS = "../config/adresses.txt"; // fichier texte contenant les adresses et ports
@@ -29,33 +33,47 @@ public class HdfsServer {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Interruption détectée. Nettoyage en cours...");
             // Appeler la méthode pour supprimer l'adresse et le port du fichier texte
-            deleteAdressPort(adress, port, ADRESSES_PORTS);
+            deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
         }));
 
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            while (!serverSocket.isClosed()) {
-                Socket clientSocket = serverSocket.accept();
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                String command = in.readLine();
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                handleCommand(command);
-            }
+            Socket clientSocket = serverSocket.accept();
+            HdfsServerThread thread = new HdfsServerThread(port, clientSocket);
+            thread.start();
+
+            // Lire l'entrée standard
+            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+            String line;
+
+            while (!(((line = userInput.readLine()) != null) && line.equals("exit"))) {}
+
+            serverSocket.close();
+            System.out.println("Server closed");
         } catch (IOException e) {
             System.out.println("Une erreur est survenue lors de l'écoute sur le port " + port);
         } finally {
-            deleteAdressPort(adress, port, ADRESSES_PORTS);
+            deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
         }
     }
 
+    /**
+     * Ajoute une adresse et un port à un fichier spécifié.
+     * 
+     * @param adresse l'adresse à ajouter
+     * @param port le port à ajouter
+     * @param cheminFichier le chemin du fichier dans lequel ajouter l'adresse et le port
+     * @return le numéro de ligne où l'adresse et le port ont été ajoutés
+     */
     private static int addAdressPort(String adresse, int port, String cheminFichier) {
         List<String> adressesPorts = lireFichier(cheminFichier);
-        String lineToAdd = adresse + " " + port;
+        int lineNumber = adressesPorts.size();
+        String lineToAdd = adresse + " " + port + " " + lineNumber;
+
         if (adressesPorts.contains(lineToAdd)) {
-            System.out.println("L'adresse " + adresse + " et le port " + port + " existent déjà dans le fichier " + cheminFichier);
+            System.out.println("L'adresse " + adresse + " et le port " + port + " existent déjà dans le fichier " + cheminFichier); 
             System.exit(1);
         }
-        int lineNumber = adressesPorts.size();
         try (PrintWriter writer = new PrintWriter(new FileWriter(cheminFichier, true))) {
             writer.println(lineToAdd);
         } catch (IOException e) {
@@ -65,6 +83,12 @@ public class HdfsServer {
         return lineNumber;
     }
 
+    /**
+     * Lit un fichier texte et retourne son contenu sous forme de liste de lignes.
+     *
+     * @param cheminFichier le chemin du fichier à lire
+     * @return une liste de lignes du fichier
+     */
     private static List<String> lireFichier(String cheminFichier) {
         List<String> lignes = new ArrayList<>();
         try (BufferedReader lecteur = new BufferedReader(new FileReader(cheminFichier))) {
@@ -78,42 +102,39 @@ public class HdfsServer {
         return lignes;
     }
 
-    private static void deleteAdressPort(String address, int port, String cheminFichier) {
+    /**
+     * Supprime une adresse et un port du fichier spécifié.
+     * 
+     * @param address l'adresse à supprimer
+     * @param port le port à supprimer
+     * @param index index du serveur
+     * @param cheminFichier le chemin du fichier contenant les adresses et les ports
+     */
+    private static void deleteAdressPort(String address, int port, int server_index, String cheminFichier) {
         try {
             File file = new File(cheminFichier);
             List<String> lines = Files.readAllLines(file.toPath());
-            String lineToRemove = address + " " + port;
+            String lineToRemove = address + " " + port + " " + server_index;
             lines.remove(lineToRemove);
             Files.write(file.toPath(), lines);
         } catch (IOException e) {
             System.out.println("Une erreur est survenue lors de la suppression de l'adresse et du port.");
         }
     }
+}
 
-    private static void handleCommand(String command) {
-        String[] parts = command.split(" ");
-        String cmd = parts[0];
-        switch (cmd) {
-            case "READ":
-                String readFileName = parts[1];
-                readFile(readFileName);
-                break;
-            case "WRITE":
-                String writeFileName = parts[2];
-                int fmt = Integer.parseInt(parts[1]);
-                writeFile(writeFileName, fmt);
-                break;
-            case "DELETE":
-                String deleteFileName = parts[1];
-                deleteFile(deleteFileName);
-                break;
-            default:
-                System.out.println("Commande non reconnue: " + cmd);
-                break;
-        }
+class HdfsServerThread extends Thread {
+
+    private int port;
+    private Socket clientSocket;
+
+    public HdfsServerThread(int port, Socket clientSocket) {
+        this.port = port;
+        this.clientSocket = clientSocket;
+        this.start();
     }
 
-    private static void readFile(String fileName) {
+    private static void readFile(String fileName, PrintWriter writer) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
             String line;
@@ -128,22 +149,66 @@ public class HdfsServer {
         }
     }
     
-    private static void writeFile(String fileName, int fmt) {
+    private static void writeFile(String fileName, BufferedReader reader) {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
-            // TODO: Écrire dans le fichier en fonction du format (fmt)
+            writer.write(reader.readLine());
+            String line;
+            while (!(line = reader.readLine()).equals("EOF")) {
+                writer.write(line);
+                writer.newLine();
+            }
             writer.close();
         } catch (IOException e) {
             System.out.println("Une erreur est survenue lors de l'écriture dans le fichier " + fileName);
         }
     }
-    
+
     private static void deleteFile(String fileName) {
         File file = new File(fileName);
         if (file.delete()) {
             System.out.println("Le fichier " + fileName + " a été supprimé.");
         } else {
             System.out.println("La suppression du fichier " + fileName + " a échoué.");
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            String input = reader.readLine();
+            String header = input.split(" ; ")[0];
+            String fileName = input.split(" ; ")[1];
+
+            switch (header) {
+                case "0":
+                    // Read file
+                    readFile(fileName, writer);
+                    break;
+                case "1":
+                    // Write file
+                    writeFile(fileName, reader);
+                    break;
+                case "2":
+                    // Delete file
+                    System.out.println("Deleting file " + fileName);
+                    deleteFile(fileName);
+                    break;
+                default:
+                    // Wrong header
+                    writer.println("Wrong header");
+                    break;
+            }
+            
+            reader.close();
+            writer.close();
+            clientSocket.close();
+            
+        } catch (IOException e) {
+            System.out.println("Une erreur est survenue lors de la lecture de la commande.");
         }
     }
 }
