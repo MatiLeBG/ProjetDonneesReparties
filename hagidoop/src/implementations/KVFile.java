@@ -82,7 +82,7 @@ public class KVFile implements FileReaderWriter {
             if (c == -1 ) {
                 index = -1;
             }
-            if (line.length() > 0) {
+            if (line.length() != 0) {
                 kv = new KV();
                 kv.k = line.split(KV.SEPARATOR)[0];
                 kv.v = line.split(KV.SEPARATOR)[1];

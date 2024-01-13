@@ -19,7 +19,7 @@ import interfaces.KV;
 
 public class HdfsClient {
 
-    private static final String ADRESSES_PORTS = "../config/adresses.txt"; // fichier texte contenant les adresses et ports
+    private static final String ADRESSES_PORTS = "src/config/adresses.txt"; // fichier texte contenant les adresses et ports
     private static List<String> adress = new ArrayList<>();
     private static List<String> port = new ArrayList<>();
     private static List<Integer> server_indexes = new ArrayList<>();
@@ -73,19 +73,27 @@ public class HdfsClient {
             File file = new File(fname);
             if (file.exists()) {
                 int fileSize = (int) file.length();
-                int sectionSize = fileSize / adress.size();
+                int sectionSize = 0;
+                if (adress.size() == 0) {
+                    System.out.println("Aucun serveur disponible.");
+                    System.exit(1);
+                } else {
+                    sectionSize = fileSize / adress.size();
+                }
                 long currentIndex = 0;
                 KV currentKV;
 
                 FileReaderWriter readerWriter;
                 readerWriter = null;
-
+                System.out.println("Format souhaité : " + fmt + "Format texte : " + FileReaderWriter.FMT_TXT + "Format KV : " + FileReaderWriter.FMT_KV + "\n");
                 switch (fmt) {
                     case FileReaderWriter.FMT_TXT:
                         readerWriter = new TextFile();
+                        System.out.println("TextFile");
                         break;
                     case FileReaderWriter.FMT_KV:
                         readerWriter = new KVFile();
+                        System.out.println("KVFile");
                         break;
                     default:
                         break;
@@ -93,25 +101,24 @@ public class HdfsClient {
 
                 readerWriter.setFname(fname);
                 readerWriter.open("read");
+                
+                BufferedReader reader = new BufferedReader(new FileReader(fname));
 
                 for (int i = 0; i < adress.size(); i++) {
                     String fileName = addToFileName(server_indexes.get(i), fname) + "\n";
                     Socket socket = new Socket(adress.get(i), Integer.parseInt(port.get(i)));
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
                     String section = "";
-                    BufferedReader reader = new BufferedReader(new FileReader(fname));
                     currentIndex = readerWriter.getIndex();
 
                     while (currentIndex != -1 && currentIndex <= (i + 1) * sectionSize) {
                         currentKV = readerWriter.read();
-                        System.out.println(currentKV.toString());
                         if (currentKV != null) {
-                            section += currentKV.toString() + "\n";
-                            System.out.println(section);
+                            section += KV.SEPARATOR + currentKV.v + "\n";
                         }
                         currentIndex = readerWriter.getIndex();
                     }
+                    System.out.println(section);
                     out.println("1" + " ; " + fileName + "\n" + section);
                     reader.close();
                 }
@@ -161,7 +168,7 @@ public class HdfsClient {
                     usage();
                     return;
                 }
-                int fmt = args[2].equals("txt") ? 0 : 1; // 0 pour txt, 1 pour kv
+                int fmt = Integer.parseInt(args[2]); // 0 pour txt, 1 pour kv
                 HdfsWrite(fmt, fname);
                 break;
             case "delete":

@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class HdfsServer {
 
-    private static final String ADRESSES_PORTS = "../config/adresses.txt"; // fichier texte contenant les adresses et ports
+    private static final String ADRESSES_PORTS = "src/config/adresses.txt"; // fichier texte contenant les adresses et ports
     private static int server_index;
     
     public static void main(String[] args) {
@@ -50,6 +50,7 @@ public class HdfsServer {
 
             serverSocket.close();
             System.out.println("Server closed");
+
         } catch (IOException e) {
             System.out.println("Une erreur est survenue lors de l'écoute sur le port " + port);
         } finally {
@@ -178,35 +179,35 @@ class HdfsServerThread extends Thread {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+            while (!clientSocket.isClosed()) {
+                String input = reader.readLine();
+                String header = input.split(" ; ")[0];
+                String fileName = input.split(" ; ")[1];
 
-            String input = reader.readLine();
-            String header = input.split(" ; ")[0];
-            String fileName = input.split(" ; ")[1];
-
-            switch (header) {
-                case "0":
-                    // Read file
-                    readFile(fileName, writer);
-                    break;
-                case "1":
-                    // Write file
-                    writeFile(fileName, reader);
-                    break;
-                case "2":
-                    // Delete file
-                    System.out.println("Deleting file " + fileName);
-                    deleteFile(fileName);
-                    break;
-                default:
-                    // Wrong header
-                    writer.println("Wrong header");
-                    break;
-            }
-            
-            reader.close();
-            writer.close();
-            clientSocket.close();
-            
+                switch (header) {
+                    case "0":
+                        // Read file
+                        readFile(fileName, writer);
+                        break;
+                    case "1":
+                        // Write file
+                        writeFile(fileName, reader);
+                        break;
+                    case "2":
+                        // Delete file
+                        System.out.println("Deleting file " + fileName);
+                        deleteFile(fileName);
+                        break;
+                    default:
+                        // Wrong header
+                        writer.println("Wrong header");
+                        break;
+                }
+                
+                reader.close();
+                writer.close();
+                clientSocket.close();
+            }  
         } catch (IOException e) {
             System.out.println("Une erreur est survenue lors de la lecture de la commande.");
         }

@@ -73,7 +73,6 @@ public class TextFile implements FileReaderWriter {
         fileName = fname;
     }
 
-    @Override
     public KV read() {
         try {
             if (reader == null) {
@@ -106,7 +105,6 @@ public class TextFile implements FileReaderWriter {
         }
     }
 
-    @Override
     public void write(KV record) {
         
     }
