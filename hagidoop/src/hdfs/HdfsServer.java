@@ -128,11 +128,11 @@ public class HdfsServer {
 
 class HdfsServerThread extends Thread {
 
-    private int port;
+    // private int port;
     private Socket clientSocket;
 
     public HdfsServerThread(int port, Socket clientSocket) {
-        this.port = port;
+        //this.port = port;
         this.clientSocket = clientSocket;
     }
 

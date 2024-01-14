@@ -4,15 +4,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import interfaces.FileReaderWriter;
 import interfaces.KV;
@@ -62,7 +59,6 @@ public class HdfsClient {
                 String fileName = addToFileName(server_indexes.get(i), fname) + "\n";
                 Socket socket = new Socket(adress.get(i), Integer.parseInt(port.get(i)));
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                System.out.println("2" + HEADER_SEPARATOR + fileName);
                 out.println("2" + HEADER_SEPARATOR + fileName);
                 out.close();
                 socket.close();
@@ -116,12 +112,11 @@ public class HdfsClient {
                     while (currentIndex != -1 && currentIndex <= (i + 1) * sectionSize) {
                         currentKV = readerWriter.read();
                         if (currentKV != null) {
-                            section += currentKV.k + currentKV.v + "\n";
+                            section += currentKV.toString() + "\n";
                         }
                         currentIndex = readerWriter.getIndex();
                     }
-                    System.out.println(section);
-                    
+
                     writer.println("1" + HEADER_SEPARATOR + fileName + "\n" + section);
                     writer.close();
                     socket.close();
@@ -146,6 +141,7 @@ public class HdfsClient {
             FileReaderWriter readerWriter = new KVFile();
             readerWriter.setFname(fname);
             readerWriter.open("write");
+
             for (int i = 0; i < adress.size(); i++) {
                 String fileName = addToFileName(server_indexes.get(i), fname);
                 Socket socket = new Socket(adress.get(i), Integer.parseInt(port.get(i)));
@@ -160,8 +156,8 @@ public class HdfsClient {
                 while ((line = reader.readLine()) != null) {
                     if (line.length() > 0) {
                         KV kv = new KV();
-                        kv.k = "";
-                        kv.v = line;
+                        kv.k = line.split(KV.SEPARATOR)[0];
+                        kv.v = line.split(KV.SEPARATOR)[1];
                         readerWriter.write(kv);
                     }
                 }
