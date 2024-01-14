@@ -1,4 +1,4 @@
-package implementations;
+package io;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -106,6 +106,15 @@ public class TextFile implements FileReaderWriter {
     }
 
     public void write(KV record) {
-        
+        try {
+            if (writer == null) {
+                throw new IllegalStateException("Writer not initialized");
+            }
+            writer.write(record.toString());
+            writer.newLine();
+            index++;
+        } catch (IOException e) {
+            System.err.println("Error writing to file: " + e.getMessage());
+        }
     }
 }

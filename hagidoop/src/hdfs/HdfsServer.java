@@ -3,6 +3,7 @@ package hdfs;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,30 +32,31 @@ public class HdfsServer {
         server_index = addAdressPort(adress, port, ADRESSES_PORTS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Interruption détectée. Nettoyage en cours...");
+            System.out.println("\n[SERVER" + "-" + server_index + "/" + adress + "-" + port + "] Interrupted. Cleaning...");
             // Appeler la méthode pour supprimer l'adresse et le port du fichier texte
             deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
         }));
 
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            Socket clientSocket = serverSocket.accept();
-            HdfsServerThread thread = new HdfsServerThread(port, clientSocket);
-            thread.start();
-
-            // Lire l'entrée standard
-            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-            String line;
-
-            while (!(((line = userInput.readLine()) != null) && line.equals("exit"))) {}
-
+            
+            while (!serverSocket.isClosed()) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("\n[SERVER" + "-" + server_index + "/" + adress + "-" + port + "] Client connected");
+                    HdfsServerThread thread = new HdfsServerThread(port, clientSocket);
+                    thread.start();
+                } catch (SocketException e) {
+                    if (e.getMessage().equals("Socket closed")) {
+                        System.out.println("Server socket closed");
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
             serverSocket.close();
-            System.out.println("Server closed");
-
         } catch (IOException e) {
             System.out.println("Une erreur est survenue lors de l'écoute sur le port " + port);
-        } finally {
-            deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
         }
     }
 
@@ -80,7 +82,7 @@ public class HdfsServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("L'adresse " + adresse + " et le port " + port + " ont été ajoutés à la ligne " + lineNumber + " du fichier " + cheminFichier);
+        System.out.println("\nServer [SERVER-" + lineNumber + "/" + adresse + "-" + port + "] started\n");
         return lineNumber;
     }
 
@@ -132,16 +134,18 @@ class HdfsServerThread extends Thread {
     public HdfsServerThread(int port, Socket clientSocket) {
         this.port = port;
         this.clientSocket = clientSocket;
-        this.start();
     }
 
     private static void readFile(String fileName, PrintWriter writer) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
             String line;
+            System.out.println("Envoi du fragment " + fileName + " au client...");
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
+                writer.println(line);
             }
+            System.out.println("Fragment " + fileName + " envoyé au client.");
             reader.close();
         } catch (FileNotFoundException e) {
             System.out.println("Le fichier " + fileName + " n'a pas été trouvé.");
@@ -153,7 +157,6 @@ class HdfsServerThread extends Thread {
     private static void writeFile(String fileName, BufferedReader reader) {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
-            System.out.println("Writing to file " + fileName);
             String line = reader.readLine();
             while (line != null) {
                 writer.write(line);
@@ -181,40 +184,38 @@ class HdfsServerThread extends Thread {
     @Override
     public void run() {
         try {
-            while (!clientSocket.isClosed()) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-            
-                String input = reader.readLine();
-                System.out.println("Received input: " + input);
-                String header = input.split(" ; ")[0];
-                String fileName = input.split(" ; ")[1];
-                switch (header) {
-                    case "0":
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);    
+            String input = reader.readLine();
+            String header = null;
+            String fileName = null;
+            if (input != null) {
+                header = input.split(HdfsClient.HEADER_SEPARATOR)[0];
+                fileName = input.split(HdfsClient.HEADER_SEPARATOR)[1];
+
+                if (header == null) {
+                    System.out.println("\nUne erreur est survenue lors de la lecture de la commande.\n");
+                } else if (header.equals("0")) {
                         // Read file
-                        System.out.println("Reading file " + fileName);
+                        System.out.println("\nReading file " + fileName + "...\n");
                         readFile(fileName, writer);
-                        break;
-                    case "1":
+                } else if (header.equals("1")) {
                         // Write file
-                        System.out.println("Writing to file " + fileName);
+                        System.out.println("\nWriting to file " + fileName + "...\n");
                         writeFile(fileName, reader);
-                        break;
-                    case "2":
+                } else if (header.equals("2")) {
                         // Delete file
-                        System.out.println("Deleting file " + fileName);
+                        System.out.println("\nDeleting file " + fileName + "...\n");
                         deleteFile(fileName);
-                        break;
-                    default:
+                } else {
                         // Wrong header
                         writer.println("Wrong header");
-                        break;
                 }
-                
-                reader.close();
-                writer.close();
-                clientSocket.close();
-            }  
+            }
+
+            reader.close();
+            writer.close();
+            clientSocket.close();
         } catch (IOException e) {
             System.out.println("Une erreur est survenue lors de la lecture de la commande.");
         }

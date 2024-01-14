@@ -1,4 +1,4 @@
-package interfaces;
+	package interfaces;
 
 import java.io.Serializable;
 
@@ -20,7 +20,7 @@ public class KV implements Serializable, Cloneable {
 	}
 
 	public String toString() {
-		return "KV [k=" + k + ", v=" + v + "]";
+		return k + KV.SEPARATOR + v;
 	}
 	
 	public Object clone() {
