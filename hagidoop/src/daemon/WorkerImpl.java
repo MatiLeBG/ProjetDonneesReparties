@@ -36,7 +36,9 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker, Serializa
     }
 
     public void runMap(Map m, FileReaderWriter reader, NetworkReaderWriter writer) throws java.rmi.RemoteException {
+        writer.openClient();
         m.map(reader, writer);
+        writer.closeClient();
     }
 
     public void test() throws java.rmi.RemoteException {
@@ -69,10 +71,7 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker, Serializa
             System.out.println("WorkerImpl " + " bound in registry");
         } catch (Exception exc) {
             exc.printStackTrace();
-        } finally {
-            //System.out.println("Nettoyage");
-            //deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
-        }
+        } 
     }
 
     private static int addAdressPort(String adresse, int port, String cheminFichier) {

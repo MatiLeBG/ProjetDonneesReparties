@@ -1,6 +1,7 @@
 package daemon;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,6 +16,8 @@ import application.Count;
 import interfaces.FileReaderWriter;
 import interfaces.MapReduce;
 import interfaces.NetworkReaderWriter;
+import io.KVFile;
+import io.TextFile;
 
 public class JobLauncher {
 
@@ -24,21 +27,49 @@ public class JobLauncher {
 	private static List<String> port = new ArrayList<>();
 	private static List<Integer> server_indexes = new ArrayList<>();
 
+	private int format;
+	private String fname;
+	private MapReduce mr;
+	public JobLauncher(MapReduce mr, int format, String fname){
+		this.format = format;
+		this.fname = fname;
+		this.mr = mr;
+
+		startJob(mr, format, fname);
+	}
 	public static void startJob(MapReduce mr, int format, String fname) {
 
 		try {
 			System.out.println(adress.size());
 			for (int i = 0; i < adress.size(); i++) {
 				String serverName = adress.get(i) + ":" + port.get(i) + "/workerServer";
-				System.out.println(serverName);
+				
+				String extension = fname.substring(fname.lastIndexOf("."));
+				String fileName =  fname.substring(0, fname.lastIndexOf("."));
+				fileName = fileName + "-" + i + extension ;
+				File file = new File(fileName);
+				if (file.createNewFile()){
+					System.out.println("feur");
+				} else {
+					System.out.println("le fichier " + fileName + " existe bien");
+				}
+				System.out.println(fileName);
+				
 				// On lance les map sur les workers
 				Worker wi = (Worker) Naming.lookup(serverName);
 				System.out.println(wi.getAdress());
-				BufferedReader reader = new BufferedReader(new FileReader(fname));
+			
+				FileReaderWriter reader;
+
+				if (format == FileReaderWriter.FMT_TXT){
+					reader = new TextFile(fileName);
+				} else {
+					reader = new KVFile(fileName);
+				}
 
 				// Il faut implémenter les interfaces FileReaderWriter et NetworkReaderWriter
-				// wi.runMap(mr,new FileReaderWriter(), new NetworkReaderWriter() );
-				wi.test();
+				wi.runMap(mr,reader,);
+				
 				// On lance aussi le reduce je crois
 				// mr.reduce(reader, writer);
 			}
@@ -74,4 +105,12 @@ public class JobLauncher {
 			e.printStackTrace();
 		}
 	}
+
+	public static String addToFileName(int i, String filePath) {
+        String directory = filePath.substring(0, filePath.lastIndexOf("/") + 1);
+        String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+        String extension = fileName.substring(fileName.lastIndexOf("."));
+        String nameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
+        return directory + nameWithoutExtension + "-" + i + extension;
+    }
 }
