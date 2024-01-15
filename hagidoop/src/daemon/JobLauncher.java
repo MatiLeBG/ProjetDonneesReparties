@@ -40,6 +40,7 @@ public class JobLauncher {
 	public static void startJob(MapReduce mr, int format, String fname) {
 
 		try {
+			
 			System.out.println(adress.size());
 			for (int i = 0; i < adress.size(); i++) {
 				String serverName = adress.get(i) + ":" + port.get(i) + "/workerServer";
