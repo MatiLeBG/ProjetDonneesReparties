@@ -16,7 +16,9 @@ import application.Count;
 import interfaces.FileReaderWriter;
 import interfaces.MapReduce;
 import interfaces.NetworkReaderWriter;
+import io.Adaptateur;
 import io.KVFile;
+import io.NetworkReaderWriterImpl;
 import io.TextFile;
 
 public class JobLauncher {
@@ -30,18 +32,23 @@ public class JobLauncher {
 	private int format;
 	private String fname;
 	private MapReduce mr;
-	public JobLauncher(MapReduce mr, int format, String fname){
+
+	public JobLauncher(MapReduce mr, int format, String fname) {
 		this.format = format;
 		this.fname = fname;
 		this.mr = mr;
 
 		startJob(mr, format, fname);
 	}
+
 	public static void startJob(MapReduce mr, int format, String fname) {
 
 		try {
 			
 			System.out.println(adress.size());
+			NetworkReaderWriterImpl serveur = new NetworkReaderWriterImpl(8000, "localhost") ;
+			serveur.openServer();
+			Adaptateur adaptateur = new Adaptateur(serveur, adress.size());
 			for (int i = 0; i < adress.size(); i++) {
 				String serverName = adress.get(i) + ":" + port.get(i) + "/workerServer";
 				
@@ -74,6 +81,7 @@ public class JobLauncher {
 				// On lance aussi le reduce je crois
 				// mr.reduce(reader, writer);
 			}
+			serveur.closeClient();
 		} catch (Exception exc) {
 			exc.printStackTrace();
 
@@ -108,10 +116,10 @@ public class JobLauncher {
 	}
 
 	public static String addToFileName(int i, String filePath) {
-        String directory = filePath.substring(0, filePath.lastIndexOf("/") + 1);
-        String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-        String extension = fileName.substring(fileName.lastIndexOf("."));
-        String nameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
-        return directory + nameWithoutExtension + "-" + i + extension;
-    }
+		String directory = filePath.substring(0, filePath.lastIndexOf("/") + 1);
+		String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+		String extension = fileName.substring(fileName.lastIndexOf("."));
+		String nameWithoutExtension = fileName.substring(0, fileName.lastIndexOf("."));
+		return directory + nameWithoutExtension + "-" + i + extension;
+	}
 }
