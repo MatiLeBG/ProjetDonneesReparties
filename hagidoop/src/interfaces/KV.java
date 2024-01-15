@@ -20,7 +20,7 @@ public class KV implements Serializable, Cloneable {
 	}
 
 	public String toString() {
-		return k + KV.SEPARATOR + v;
+		return "KV [k=" + k + ", v=" + v + "]";
 	}
 	
 	public Object clone() {

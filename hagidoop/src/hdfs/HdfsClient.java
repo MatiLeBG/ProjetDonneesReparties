@@ -112,7 +112,8 @@ public class HdfsClient {
                     while (currentIndex != -1 && currentIndex <= (i + 1) * sectionSize) {
                         currentKV = readerWriter.read();
                         if (currentKV != null) {
-                            section += currentKV.toString() + "\n";
+                            // section += currentKV.toString() + "\n";
+                            section += currentKV.v + "\n";
                         }
                         currentIndex = readerWriter.getIndex();
                     }
@@ -138,7 +139,8 @@ public class HdfsClient {
                 System.out.println("Aucun serveur disponible.");
                 System.exit(1);
             }
-            FileReaderWriter readerWriter = new KVFile();
+            //FileReaderWriter readerWriter = new KVFile();
+            FileReaderWriter readerWriter = new TextFile();
             readerWriter.setFname(fname);
             readerWriter.open("write");
 
@@ -156,8 +158,8 @@ public class HdfsClient {
                 while ((line = reader.readLine()) != null) {
                     if (line.length() > 0) {
                         KV kv = new KV();
-                        kv.k = line.split(KV.SEPARATOR)[0];
-                        kv.v = line.split(KV.SEPARATOR)[1];
+                        kv.k = "";
+                        kv.v = line;
                         readerWriter.write(kv);
                     }
                 }

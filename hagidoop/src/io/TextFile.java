@@ -110,7 +110,7 @@ public class TextFile implements FileReaderWriter {
             if (writer == null) {
                 throw new IllegalStateException("Writer not initialized");
             }
-            writer.write(record.toString());
+            writer.write(record.v);
             writer.newLine();
             index++;
         } catch (IOException e) {
