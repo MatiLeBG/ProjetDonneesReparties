@@ -84,8 +84,7 @@ public class KVFile implements FileReaderWriter {
             }
             if (line.length() != 0) {
                 kv = new KV();
-                kv.k = line.split(KV.SEPARATOR)[0];
-                kv.v = line.split(KV.SEPARATOR)[1];
+                kv = KV.fromString(line);
             }
             return kv;
         } catch (IOException e) {

@@ -7,13 +7,12 @@ public class KV implements Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 
 	public static final String SEPARATOR = "<->";
-
+	
 	public String k;
 	public String v;
-
-	public KV() {
-	}
-
+	
+	public KV() {}
+	
 	public KV(String k, String v) {
 		super();
 		this.k = k;
@@ -22,6 +21,17 @@ public class KV implements Serializable, Cloneable {
 
 	public String toString() {
 		return "KV [k=" + k + ", v=" + v + "]";
+	}
+	
+	public static KV fromString(String s) {
+		KV kv = new KV();
+		int startIndex = s.indexOf("k=") + 2;
+		int endIndex = s.indexOf(", v=");
+		kv.k = s.substring(startIndex, endIndex);
+		startIndex = s.indexOf("v=") + 2;
+		endIndex = s.indexOf("]");
+		kv.v = s.substring(startIndex, endIndex);
+		return kv;
 	}
 
 	public Object clone() {
@@ -32,10 +42,5 @@ public class KV implements Serializable, Cloneable {
 			return null;
 		}
 	}
-
-	public static void main(String[] args) {
-		KV kvTest = new KV("test", "feur");
-		System.out.println(kvTest);
-
-	}
+	
 }
