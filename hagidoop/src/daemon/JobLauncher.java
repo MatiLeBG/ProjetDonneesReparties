@@ -32,7 +32,7 @@ public class JobLauncher {
 				String serverName = adress.get(i) + ":" + port.get(i) + "/workerServer";
 				System.out.println(serverName);
 				// On lance les map sur les workers
-				WorkerImpl wi = (WorkerImpl) Naming.lookup(serverName);
+				Worker wi = (Worker) Naming.lookup(serverName);
 				System.out.println(wi.getAdress());
 				BufferedReader reader = new BufferedReader(new FileReader(fname));
 

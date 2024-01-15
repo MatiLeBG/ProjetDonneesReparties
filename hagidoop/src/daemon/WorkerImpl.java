@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +20,7 @@ import interfaces.FileReaderWriter;
 import interfaces.Map;
 import interfaces.NetworkReaderWriter;
 
-public class WorkerImpl implements Worker, Serializable {
+public class WorkerImpl extends UnicastRemoteObject implements Worker, Serializable {
 
     private static final String ADRESSES_PORTS = "config/adressesWorker.txt"; // fichier texte contenant les
                                                                               // adresses et ports
@@ -29,16 +30,16 @@ public class WorkerImpl implements Worker, Serializable {
 
     private int port;
 
-    public WorkerImpl(String adr, int prt) {
+    public WorkerImpl(String adr, int prt) throws java.rmi.RemoteException{
         adress = adr;
         port = prt;
     }
 
-    public void runMap(Map m, FileReaderWriter reader, NetworkReaderWriter writer) throws RemoteException {
+    public void runMap(Map m, FileReaderWriter reader, NetworkReaderWriter writer) throws java.rmi.RemoteException {
         m.map(reader, writer);
     }
 
-    public void test() {
+    public void test() throws java.rmi.RemoteException {
         System.out.println("Ce test a été éffectué avec succès");
     }
 
@@ -49,13 +50,13 @@ public class WorkerImpl implements Worker, Serializable {
 
         server_index = addAdressPort(adress, port, ADRESSES_PORTS);
 
-        /*
-         * Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-         * System.out.println("Interruption détectée. Nettoyage en cours...");
-         * // Appeler la méthode pour supprimer l'adresse et le port du fichier texte
-         * deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
-         * }));
-         */
+        
+         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+         System.out.println("Interruption détectée. Nettoyage en cours...");
+         // Appeler la méthode pour supprimer l'adresse et le port du fichier texte
+         deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
+         }));
+         
 
         try {
             Registry registry = LocateRegistry.createRegistry(port);
@@ -69,8 +70,8 @@ public class WorkerImpl implements Worker, Serializable {
         } catch (Exception exc) {
             exc.printStackTrace();
         } finally {
-            // System.out.println("Nettoyage");
-            // deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
+            //System.out.println("Nettoyage");
+            //deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
         }
     }
 
