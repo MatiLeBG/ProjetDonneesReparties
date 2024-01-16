@@ -142,7 +142,6 @@ class HdfsServerThread extends Thread {
             String line;
             System.out.println("Envoi du fragment " + fileName + " au client...");
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
                 writer.println(line);
             }
             System.out.println("Fragment " + fileName + " envoyé au client.");

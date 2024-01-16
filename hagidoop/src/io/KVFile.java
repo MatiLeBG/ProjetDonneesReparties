@@ -14,8 +14,9 @@ public class KVFile implements FileReaderWriter {
     private int index;
     private String fileName;
 
-    private BufferedWriter writer;
-    private InputStreamReader reader;
+    private transient BufferedWriter writer;
+    private transient InputStreamReader reader;
+    private static final long serialVersionUID = 4746455962853572406L;
 
     public KVFile(String fname) {
         this.index = 0;
@@ -84,8 +85,7 @@ public class KVFile implements FileReaderWriter {
             }
             if (line.length() != 0) {
                 kv = new KV();
-                kv.k = line.split(KV.SEPARATOR)[0];
-                kv.v = line.split(KV.SEPARATOR)[1];
+                kv = KV.fromString(line);
             }
             return kv;
         } catch (IOException e) {

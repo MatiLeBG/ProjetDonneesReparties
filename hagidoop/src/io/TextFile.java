@@ -16,8 +16,8 @@ public class TextFile implements FileReaderWriter {
     private int index;
     private String fileName;
 
-    private BufferedWriter writer;
-    private InputStreamReader reader;
+    private transient BufferedWriter writer;
+    private transient InputStreamReader reader;
 
     public TextFile(String fname) {
         this.index = 0;

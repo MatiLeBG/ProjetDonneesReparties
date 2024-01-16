@@ -23,6 +23,17 @@ public class KV implements Serializable, Cloneable {
 		return "KV [k=" + k + ", v=" + v + "]";
 	}
 	
+	public static KV fromString(String s) {
+		KV kv = new KV();
+		int startIndex = s.indexOf("k=") + 2;
+		int endIndex = s.indexOf(", v=");
+		kv.k = s.substring(startIndex, endIndex);
+		startIndex = s.indexOf("v=") + 2;
+		endIndex = s.indexOf("]");
+		kv.v = s.substring(startIndex, endIndex);
+		return kv;
+	}
+
 	public Object clone() {
 		try {
 			return super.clone();
