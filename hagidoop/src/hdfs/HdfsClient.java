@@ -105,6 +105,7 @@ public class HdfsClient {
 
                 for (int i = 0; i < adress.size(); i++) {
                     String fileName =  addToFileName(server_indexes.get(i), fname);
+                    System.out.println("Envoi de la section " + i + " du fichier " + fname + " au serveur " + adress.get(i) + ":" + port.get(i));
                     Socket socket = new Socket(adress.get(i), Integer.parseInt(port.get(i)));
                     PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
                     String section = "";

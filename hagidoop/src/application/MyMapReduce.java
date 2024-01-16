@@ -29,8 +29,10 @@ public class MyMapReduce implements MapReduce {
 
 		}
 		
-		for (String k : hm.keySet())
+		for (String k : hm.keySet()) {
+			// System.out.println(k + " " + hm.get(k));
 			writer.write(new KV(k, hm.get(k).toString()));
+		}
 	}
 
 	public void reduce(Reader reader, Writer writer) {

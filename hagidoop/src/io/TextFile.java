@@ -99,6 +99,7 @@ public class TextFile implements FileReaderWriter {
                 kv.k = "";
                 kv.v = line;
             }
+            //System.out.println("Read: " + kv.toString());
             return kv;
         } catch (IOException e) {
             System.err.println("Error reading file: " + e.getMessage());
