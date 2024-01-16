@@ -38,6 +38,7 @@ public class JobLauncher {
 		this.fname = fname;
 		this.mr = mr;
 
+		retrieveWorkerAdress(ADRESSES_PORTS);
 		startJob(mr, format, fname);
 	}
 
