@@ -106,7 +106,13 @@ public class JobLauncher {
 			}
 			long endMapTime = System.nanoTime() / 1000000;
 			System.out.println("Temps d'exécution du map sur les workers : " + (endMapTime - startMapTime) + " ms");
-
+			File reducedFile = new File(reduced.getFname());
+			System.out.println("Création du fichier " + reduced.getFname());
+			if (reducedFile.createNewFile()) {
+				System.out.println("Création du fichier " + reduced.getFname() + " réussie !");
+			} else {
+				System.out.println("Le fichier " + reduced.getFname() + " existe bien");
+			}
 			reduced.open("write");
 
 			System.out.println("Reducing...");

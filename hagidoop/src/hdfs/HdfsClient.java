@@ -28,7 +28,7 @@ public class HdfsClient {
 
     private static void usage() {
         System.out.println("Usage: java HdfsClient read <file>");
-        System.out.println("Usage: java HdfsClient write <txt|kv> <file>");
+        System.out.println("Usage: java HdfsClient write <file> <txt : 0|kv : 1>");
         System.out.println("Usage: java HdfsClient delete <file>");
     }
     
