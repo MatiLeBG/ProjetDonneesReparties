@@ -22,9 +22,9 @@ public class JobLauncher {
 
 	private static final String ADRESSES_PORTS = "config/adressesWorker.txt"; // fichier texte contenant les
 																				// adresses et ports
-	// private static final String REDUCED_FILE_PATH = "data/reduced/";
+	private static final String REDUCED_FILE_PATH = "data/reduced/";
 
-	private static final String REDUCED_FILE_PATH = "../data/reduced/";
+	//private static final String REDUCED_FILE_PATH = "../data/reduced/";
 
 	private static List<String> adress = new ArrayList<>();
 	private static List<String> port = new ArrayList<>();

@@ -14,8 +14,8 @@ import java.util.List;
  */
 public class HdfsServer {
 
-    //private static final String ADRESSES_PORTS = "src/config/adresses.txt"; // fichier texte contenant les adresses et ports
-    private static final String ADRESSES_PORTS = "config/adresses.txt"; // fichier texte contenant les adresses et ports
+    private static final String ADRESSES_PORTS = "src/config/adresses.txt"; // fichier texte contenant les adresses et ports
+    //private static final String ADRESSES_PORTS = "config/adresses.txt"; // fichier texte contenant les adresses et ports
     private static int server_index;
     
     public static void main(String[] args) {

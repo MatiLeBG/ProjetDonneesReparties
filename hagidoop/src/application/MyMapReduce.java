@@ -14,7 +14,7 @@ public class MyMapReduce implements MapReduce {
 
 	// MapReduce program that compute word counts
 	public void map(Reader reader, Writer writer) {
-		System.out.println("test");
+		
 		HashMap<String, Integer> hm = new HashMap<String, Integer>();
 		KV kv;
 		while ((kv = reader.read()) != null) {
@@ -28,8 +28,7 @@ public class MyMapReduce implements MapReduce {
 			}
 
 		}
-		for (String k : hm.keySet())
-			System.out.println(k + " " + hm.get(k).toString());
+		
 		for (String k : hm.keySet())
 			writer.write(new KV(k, hm.get(k).toString()));
 	}
