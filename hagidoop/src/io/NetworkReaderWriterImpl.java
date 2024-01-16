@@ -47,7 +47,7 @@ public class NetworkReaderWriterImpl implements NetworkReaderWriter {
         KV remoteKV = null;
         try {
             String line = input.readLine();
-            System.out.println("ligne :" + line);
+            
             if (line != null) {
                 remoteKV = KV.fromString(line);
             }
