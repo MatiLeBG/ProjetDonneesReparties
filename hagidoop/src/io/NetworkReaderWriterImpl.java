@@ -12,7 +12,7 @@ import java.io.BufferedReader;
 
 import interfaces.KV;
 
-public class NetworkReaderWriterImpl implements NetworkReaderWriter{
+public class NetworkReaderWriterImpl implements NetworkReaderWriter {
 
     private transient Socket client;
     private int port;
@@ -21,31 +21,33 @@ public class NetworkReaderWriterImpl implements NetworkReaderWriter{
     private transient ServerSocket server;
     private transient PrintWriter output;
     private transient BufferedReader input;
+    int bufferSize = 16384;
 
     public static final int PORT = 8000;
 
-    public NetworkReaderWriterImpl (int port, String adress){
+    public NetworkReaderWriterImpl(int port, String adress) {
         this.port = port;
         this.adress = adress;
     }
-    
-    public NetworkReaderWriterImpl(Socket socket, int port, String adress){
+
+    public NetworkReaderWriterImpl(Socket socket, int port, String adress) {
         this.client = socket;
         this.port = port;
         this.adress = adress;
 
         try {
             output = new PrintWriter(socket.getOutputStream(), true);
-            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            input = new BufferedReader(new InputStreamReader(socket.getInputStream()), bufferSize);
         } catch (IOException e) {
             e.printStackTrace();
         }
-}
-    
+    }
+
     public KV read() {
         KV remoteKV = null;
         try {
             String line = input.readLine();
+            System.out.println("ligne :" + line);
             if (line != null) {
                 remoteKV = KV.fromString(line);
             }
@@ -56,22 +58,22 @@ public class NetworkReaderWriterImpl implements NetworkReaderWriter{
         }
     }
 
-    public void write(KV remoteKV){
+    public void write(KV remoteKV) {
         output.println(remoteKV.toString());
     }
 
-    public void openServer(){
-            try {
-            this.server =  new ServerSocket(PORT);
-            } catch (IOException e) {
-                System.out.println("Une erreur est survenue lors de l'écoute sur le port " + PORT);
+    public void openServer() {
+        try {
+            this.server = new ServerSocket(PORT);
+        } catch (IOException e) {
+            System.out.println("Une erreur est survenue lors de l'écoute sur le port " + PORT);
         }
-            
+
     }
 
-    public void openClient(){
+    public void openClient() {
         try {
-            this.client = new Socket("localhost",PORT);
+            this.client = new Socket("localhost", PORT);
             output = new PrintWriter(client.getOutputStream(), true);
             input = new BufferedReader(new InputStreamReader(client.getInputStream()));
         } catch (UnknownHostException e) {
@@ -82,7 +84,7 @@ public class NetworkReaderWriterImpl implements NetworkReaderWriter{
 
     }
 
-    public void closeClient(){
+    public void closeClient() {
         try {
             this.client.close();
             output.close();
@@ -101,11 +103,11 @@ public class NetworkReaderWriterImpl implements NetworkReaderWriter{
         }
     }
 
-    public NetworkReaderWriter accept(){
+    public NetworkReaderWriter accept() {
 
         Socket client;
         try {
-             client = this.server.accept();
+            client = this.server.accept();
         } catch (IOException e) {
             client = null;
             e.printStackTrace();

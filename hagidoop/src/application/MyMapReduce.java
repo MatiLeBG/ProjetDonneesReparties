@@ -14,34 +14,44 @@ public class MyMapReduce implements MapReduce {
 
 	// MapReduce program that compute word counts
 	public void map(Reader reader, Writer writer) {
-
-		HashMap<String,Integer> hm = new HashMap<String,Integer>();
+		System.out.println("test");
+		HashMap<String, Integer> hm = new HashMap<String, Integer>();
 		KV kv;
 		while ((kv = reader.read()) != null) {
+
 			String tokens[] = kv.v.split(" ");
 			for (String tok : tokens) {
-				if (hm.containsKey(tok)) hm.put(tok, hm.get(tok)+1);
-				else hm.put(tok, 1);
+				if (hm.containsKey(tok))
+					hm.put(tok, hm.get(tok) + 1);
+				else
+					hm.put(tok, 1);
 			}
+
 		}
-		for (String k : hm.keySet()) writer.write(new KV(k,hm.get(k).toString()));
+		for (String k : hm.keySet())
+			System.out.println(k + " " + hm.get(k).toString());
+		for (String k : hm.keySet())
+			writer.write(new KV(k, hm.get(k).toString()));
 	}
 
 	public void reduce(Reader reader, Writer writer) {
-		HashMap<String,Integer> hm = new HashMap<String,Integer>();
+		HashMap<String, Integer> hm = new HashMap<String, Integer>();
 		KV kv;
 		while ((kv = reader.read()) != null) {
-			if (hm.containsKey(kv.k)) hm.put(kv.k, hm.get(kv.k)+Integer.parseInt(kv.v));
-			else hm.put(kv.k, Integer.parseInt(kv.v));
+			if (hm.containsKey(kv.k))
+				hm.put(kv.k, hm.get(kv.k) + Integer.parseInt(kv.v));
+			else
+				hm.put(kv.k, Integer.parseInt(kv.v));
 		}
-		for (String k : hm.keySet()) writer.write(new KV(k,hm.get(k).toString()));
+		for (String k : hm.keySet())
+			writer.write(new KV(k, hm.get(k).toString()));
 	}
 
 	public static void main(String args[]) {
 		long t1 = System.currentTimeMillis();
 		JobLauncher.startJob(new MyMapReduce(), FileReaderWriter.FMT_TXT, args[0]);
 		long t2 = System.currentTimeMillis();
-		System.out.println("time in ms ="+(t2-t1));
+		System.out.println("time in ms =" + (t2 - t1));
 		System.exit(0);
 	}
 }

@@ -12,7 +12,7 @@ import interfaces.FileReaderWriter;
 import interfaces.KV;
 
 public class TextFile implements FileReaderWriter {
-    
+
     private int index;
     private String fileName;
 
@@ -75,6 +75,7 @@ public class TextFile implements FileReaderWriter {
 
     public KV read() {
         try {
+
             if (reader == null) {
                 throw new IllegalStateException("Reader not initialized");
             }
@@ -90,7 +91,7 @@ public class TextFile implements FileReaderWriter {
                 line += (char) c;
                 c = reader.read();
             }
-            if (c == -1 ) {
+            if (c == -1) {
                 index = -1;
             }
             if (line.length() > 0) {
@@ -117,4 +118,5 @@ public class TextFile implements FileReaderWriter {
             System.err.println("Error writing to file: " + e.getMessage());
         }
     }
+
 }

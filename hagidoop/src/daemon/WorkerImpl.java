@@ -30,14 +30,18 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker, Serializa
 
     private int port;
 
-    public WorkerImpl(String adr, int prt) throws java.rmi.RemoteException{
+    public WorkerImpl(String adr, int prt) throws java.rmi.RemoteException {
         adress = adr;
         port = prt;
     }
 
     public void runMap(Map m, FileReaderWriter reader, NetworkReaderWriter writer) throws java.rmi.RemoteException {
+
         writer.openClient();
+
+        reader.open("read");
         m.map(reader, writer);
+        reader.close();
         writer.closeClient();
     }
 
@@ -52,13 +56,12 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker, Serializa
 
         server_index = addAdressPort(adress, port, ADRESSES_PORTS);
 
-        
-         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-         System.out.println("Interruption détectée. Nettoyage en cours...");
-         // Appeler la méthode pour supprimer l'adresse et le port du fichier texte
-         deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
-         }));
-         
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Interruption détectée. Nettoyage en cours...");
+            // Appeler la méthode pour supprimer l'adresse et le port du fichier texte
+            deleteAdressPort(adress, port, server_index, ADRESSES_PORTS);
+        }));
+
         try {
             Registry registry = LocateRegistry.createRegistry(port);
             // Create an instance of the server object
@@ -70,7 +73,7 @@ public class WorkerImpl extends UnicastRemoteObject implements Worker, Serializa
             System.out.println("WorkerImpl " + " bound in registry");
         } catch (Exception exc) {
             exc.printStackTrace();
-        } 
+        }
     }
 
     private static int addAdressPort(String adresse, int port, String cheminFichier) {

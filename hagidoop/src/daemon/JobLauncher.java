@@ -21,8 +21,10 @@ import hdfs.HdfsClient;
 public class JobLauncher {
 
 	private static final String ADRESSES_PORTS = "config/adressesWorker.txt"; // fichier texte contenant les
-																			  // adresses et ports
-	private static final String REDUCED_FILE_PATH = "data/reduced/";
+																				// adresses et ports
+	// private static final String REDUCED_FILE_PATH = "data/reduced/";
+
+	private static final String REDUCED_FILE_PATH = "../data/reduced/";
 
 	private static List<String> adress = new ArrayList<>();
 	private static List<String> port = new ArrayList<>();
@@ -31,16 +33,19 @@ public class JobLauncher {
 	private int format;
 	private String fname;
 	private MapReduce mr;
-	public JobLauncher(MapReduce mr, int format, String fname){
+
+	public JobLauncher(MapReduce mr, int format, String fname) {
 		this.format = format;
 		this.fname = fname;
 		this.mr = mr;
 
-	// startJob(mr, format, fname);
+		startJob(mr, format, fname);
 	}
+
 	public static void startJob(MapReduce mr, int format, String fname) {
 
 		try {
+			retrieveWorkerAdress(ADRESSES_PORTS);
 			System.out.println(adress.size());
 			NetworkReaderWriter networkWriter;
 			FileReaderWriter reader = null;
@@ -49,41 +54,44 @@ public class JobLauncher {
 			adaptater.start();
 
 			FileReaderWriter reduced = new KVFile();
-			reduced.setFname(REDUCED_FILE_PATH + fname);
+			String fnameWoPath = fname.substring(fname.lastIndexOf("/") + 1);
+			reduced.setFname(REDUCED_FILE_PATH + fnameWoPath);
 
 			Thread[] workThreads = new Thread[adress.size()];
 
 			// On parcoure la liste des workers
 			for (int i = 0; i < adress.size(); i++) {
 				String serverName = adress.get(i) + ":" + port.get(i) + "/workerServer";
-				
+
 				String fileName = HdfsClient.addToFileName(i, fname);
 				File file = new File(fileName);
 				System.out.println("Création du fichier " + fileName);
 
-				if (file.createNewFile()){
+				if (file.createNewFile()) {
 					System.out.println("Création du fichier " + fileName + " réussie !");
 				} else {
 					System.out.println("Le fichier " + fileName + " existe bien");
 				}
-				System.out.println(fileName);
-				
-				Worker wi = (Worker) Naming.lookup(serverName);
-				System.out.println(wi.getAdress());
+				// System.out.println(fileName);
 
-				if (format == FileReaderWriter.FMT_TXT){
+				Worker wi = (Worker) Naming.lookup(serverName);
+				// System.out.println(wi.getAdress());
+
+				if (format == FileReaderWriter.FMT_TXT) {
+					System.out.println("Opération sur un fichier texte");
 					reader = new TextFile(fileName);
 				} else if (format == FileReaderWriter.FMT_KV) {
+					System.out.println("Opération sur un fichier KV");
 					reader = new KVFile(fileName);
 				} else {
 					System.out.println("Format non reconnu");
 					System.exit(1);
 				}
-
 				networkWriter = new NetworkReaderWriterImpl(2000, "localhost");
 				reader.open("read");
-				
-				// On lance les runMap de chaque worker dans un thread pour que ça soit en simultané
+
+				// On lance les runMap de chaque worker dans un thread pour que ça soit en
+				// simultané
 				System.out.println("Mapping du worker : [WORKER-" + i + "]");
 				workThreads[i] = new WorkInThread(wi, mr, reader, networkWriter);
 				workThreads[i].start();
@@ -110,8 +118,6 @@ public class JobLauncher {
 		} catch (Exception exc) {
 			exc.printStackTrace();
 		}
-		
-		
 
 	}
 
@@ -124,7 +130,7 @@ public class JobLauncher {
 		int format = Integer.parseInt(args[1]);
 		if (format == 0) {
 			format = FileReaderWriter.FMT_TXT;
-		} else  if (format == 1) {
+		} else if (format == 1) {
 			format = FileReaderWriter.FMT_KV;
 		} else {
 			System.out.println("Format non reconnu");
@@ -166,6 +172,7 @@ class WorkInThread extends Thread {
 
 	public void run() {
 		try {
+
 			wi.runMap(mr, reader, networkWriter);
 		} catch (IOException e) {
 			e.printStackTrace();

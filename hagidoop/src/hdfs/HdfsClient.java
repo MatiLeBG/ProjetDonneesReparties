@@ -18,7 +18,8 @@ import io.TextFile;
 
 public class HdfsClient {
 
-    private static final String ADRESSES_PORTS = "src/config/adresses.txt"; // fichier texte contenant les adresses et ports
+    //private static final String ADRESSES_PORTS = "src/config/adresses.txt"; // fichier texte contenant les adresses et ports
+    private static final String ADRESSES_PORTS = "config/adresses.txt"; // fichier texte contenant les adresses et ports
     public static final String HEADER_SEPARATOR = " ; ";
 
     private static List<String> adress = new ArrayList<>();
